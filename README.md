@@ -2,6 +2,9 @@
 
 A lightweight HTTP API server for centralized logging and debugging. Send log entries from any application or service to a central server with a web interface for real-time monitoring.
 
+<img width="1570" alt="Screenshot 2025-06-07 at 6 47 49 PM" src="https://github.com/user-attachments/assets/5d5e7332-ec40-44d9-a48a-d508caa28140" />
+
+
 ## Features
 
 - HTTP API for receiving log entries
