@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Logs</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <style>
+        body {
+            background-color: #0c0c0c;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.2;
+        }
+
+        .log-entry {
+            margin: 2px 0;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+
+        .log-time {
+            color: #808080;
+        }
+
+        .log-level-ERROR {
+            color: #ff4444;
+            font-weight: bold;
+        }
+
+        .log-level-WARN {
+            color: #ffaa00;
+            font-weight: bold;
+        }
+
+        .log-level-INFO {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .log-level-DEBUG {
+            color: #00aaff;
+            font-weight: bold;
+        }
+
+        .log-message {
+            color: #ffffff;
+        }
+
+        .log-source {
+            color: #888888;
+        }
+
+        .log-metadata {
+            color: #666666;
+            font-size: 12px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin-right: 20px;
+        }
+
+        .download-btn {
+            background-color: #000000;
+            color: #ffffff;
+            border: 1px solid #555555;
+            padding: 8px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 70px;
+            transition: background-color 0.2s;
+        }
+
+        .download-btn:hover {
+            background-color: #262323;
+        }
+
+        .download-btn:active {
+            background-color: #222222;
+        }
+
+        .top-btn {
+            background-color: #000000;
+            color: #ffffff;
+            border: 1px solid #555555;
+            padding: 5px 10px;
+            margin-top: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .top-btn:hover {
+            background-color: #262323;
+        }
+
+        .top-btn:active {
+            background-color: #222222;
+        }
+
+        .nav-links {
+            position: fixed;
+            top: 50px;
+            right: 50px;
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .nav-link {
+            color: #4A90E2;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        .nav-link:hover {
+            color: #6BB6FF;
+        }
+
+        .nav-link:active {
+            color: #2E5984;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>{{ logs|length }}</h1>
+        <img src="/static/favicon.png" style="width: 100px; height: 100px;">
+        <button class="download-btn">Download</button>
+    </div>
+
+    <div class="nav-links">
+        <a href="/logs" class="nav-link">/logs</a>
+        <a href="/events" class="nav-link">/events</a>
+    </div>
+
+    <div id="logs-container">
+        {% for log in logs %}
+        <div class="log-entry">
+            <span class="log-time">{{ log.timestamp.split('T')[1].split('.')[0] }}</span> <span
+                class="log-level-{{ log.level }}">{{ log.level }}</span> <span class="log-source">[{{ log.source
+                }}]</span> <span class="log-message">{{ log.message }}</span>{% if log.metadata and log.metadata != {}
+            %} <span class="log-metadata">{{ log.metadata }}</span>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div style="height: 75px;"></div>
+    <div style="margin-left: 50px;">
+        <sub>End of logs</sub> <br>
+        <button class="top-btn">Back to top</button>
+    </div>
+    <div style="height: 75px;"></div>
+
+    <script>
+        // Server-sent events for real-time updates
+        const eventSource = new EventSource('/events');
+
+        eventSource.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+
+            if (data.success) {
+                const container = document.getElementById('logs-container');
+                const headerCount = document.querySelector('.header h1');
+
+                if (data.logs.length === 0) {
+                    container.innerHTML = '';
+                    headerCount.textContent = '0';
+                } else {
+                    let html = '';
+                    data.logs.forEach(log => {
+                        const time = log.timestamp.split('T')[1].split('.')[0];
+                        const metadata = log.metadata && Object.keys(log.metadata).length > 0 ?
+                            ` <span class="log-metadata">${JSON.stringify(log.metadata)}</span>` : '';
+
+                        html += `<div class="log-entry">
+<span class="log-time">${time}</span> <span class="log-level-${log.level}">${log.level}</span> <span class="log-source">[${log.source}]</span> <span class="log-message">${log.message}</span>${metadata}
+</div>`;
+                    });
+                    container.innerHTML = html;
+                    headerCount.textContent = data.logs.length;
+                }
+            }
+        };
+
+        eventSource.onerror = function (event) {
+            console.error('SSE connection error:', event);
+        };
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function () {
+            eventSource.close();
+        });
+
+        // Add event listener for download button
+        const downloadBtn = document.querySelector('.download-btn');
+        downloadBtn.addEventListener('click', function () {
+            // Get all log entries
+            const logEntries = document.querySelectorAll('.log-entry');
+            let logText = '';
+
+            logEntries.forEach(entry => {
+                // Extract text content and clean it up
+                const text = entry.textContent.trim();
+                logText += text + '\n';
+            });
+
+            // Create download
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+
+            // Generate filename with current timestamp
+            const now = new Date();
+            const timestamp = now.toISOString().replace(/[:.]/g, '-').split('T')[0] + '_' +
+                now.toTimeString().split(' ')[0].replace(/:/g, '-');
+
+            a.href = url;
+            a.download = `logs_${timestamp}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        });
+
+        // Add event listener for back to top button
+        const topBtn = document.querySelector('.top-btn');
+        topBtn.addEventListener('click', function () {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+</body>
+
+</html>
