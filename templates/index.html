@@ -10,7 +10,7 @@
             color: #ffffff;
             font-family: 'Courier New', monospace;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             line-height: 1.2;
         }
 
@@ -18,18 +18,33 @@
             margin: 2px 0;
             font-size: 13px;
             white-space: pre-wrap;
+            padding: 2px 4px;
+            border-radius: 2px;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .log-entry:hover {
+            background-color: #1a1a1a;
         }
 
         .log-time {
             color: #808080;
         }
 
-        .log-level-ERROR {
+        .log-level-CRITICAL {
             color: #ff4444;
             font-weight: bold;
         }
 
-        .log-level-WARN {
+        .log-level-ERROR {
+            color: #bf6c6c;
+            font-weight: bold;
+        }
+
+        .log-level-WARNING {
             color: #ffaa00;
             font-weight: bold;
         }
@@ -60,10 +75,20 @@
         .header {
             display: flex;
             align-items: center;
+            position: fixed;
+            top: 0;
+            left: 25px;
+            right: 0;
+            background-color: #0c0c0c;
+            padding: 20px;
+            border-bottom: 1px solid #333333;
+            z-index: 1001;
         }
 
         .header h1 {
             margin-right: 20px;
+            margin-top: 0;
+            margin-bottom: 0;
         }
 
         .download-btn {
@@ -114,7 +139,7 @@
             right: 50px;
             display: flex;
             gap: 15px;
-            z-index: 1000;
+            z-index: 1002;
         }
 
         .nav-link {
@@ -122,6 +147,10 @@
             font-family: 'Courier New', monospace;
             font-size: 14px;
             text-decoration: underline;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+            backdrop-filter: blur(4px);
         }
 
         .nav-link:hover {
@@ -131,10 +160,121 @@
         .nav-link:active {
             color: #2E5984;
         }
+
+        .search-container {
+            position: fixed;
+            top: 160px;
+            left: 45px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 1000;
+            /* background-color: rgba(12, 12, 12, 0.9); */
+            backdrop-filter: blur(4px);
+            /* padding: 10px 20px; */
+            /* border-radius: 8px; */
+            /* border: 1px solid #333333; */
+        }
+
+        .search-input {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            border: 1px solid #555555;
+            padding: 8px 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            border-radius: 4px;
+            width: 300px;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4A90E2;
+        }
+
+        .search-input::placeholder {
+            color: #888888;
+        }
+
+        .search-btn {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            border: 1px solid #555555;
+            padding: 8px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .search-btn:hover {
+            background-color: #262323;
+            border-color: #4A90E2;
+        }
+
+        .search-btn:active {
+            background-color: #222222;
+        }
+
+        .clear-search-btn {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            border: 1px solid #555555;
+            padding: 8px 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .clear-search-btn:hover {
+            background-color: #262323;
+            border-color: #666666;
+        }
+
+        .clear-search-btn:active {
+            background-color: #222222;
+        }
+
+        .search-info {
+            color: #888888;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .log-entry.highlighted {
+            background-color: #2a2a1a !important;
+            border-left: 3px solid #4A90E2;
+            padding-left: 8px;
+        }
+
+        .search-match {
+            background-color: #4A90E2;
+            color: #000000;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        #logs-container {
+            margin-top: 230px;
+            padding-bottom: 100px;
+            padding-left: 40px;
+            padding-right: 20px;
+        }
     </style>
 </head>
 
 <body>
+    <div class="search-container">
+        <input type="text" class="search-input" id="search-input" placeholder="Search logs..." />
+        <button class="search-btn" id="search-btn">Search</button>
+        <button class="clear-search-btn" id="clear-search-btn">Clear</button>
+        <span class="search-info" id="search-info"></span>
+    </div>
+
     <div class="header">
         <h1>{{ logs|length }}</h1>
         <img src="/static/favicon.png" style="width: 100px; height: 100px;">
@@ -143,7 +283,10 @@
 
     <div class="nav-links">
         <a href="/logs" class="nav-link">/logs</a>
-        <a href="/events" class="nav-link">/events</a>
+        <a href="/logs/search?q=error" class="nav-link">/logs/search</a>
+        <a href="/logs/errors" class="nav-link">/logs/errors</a>
+        <a href="/logs/statistics" class="nav-link">/logs/statistics</a>
+        <a href="/events" class="nav-link">/events (SSE)</a>
     </div>
 
     <div id="logs-container">
@@ -157,8 +300,7 @@
         {% endfor %}
     </div>
 
-    <div style="height: 75px;"></div>
-    <div style="margin-left: 50px;">
+    <div style="text-align: center;">
         <sub>End of logs</sub> <br>
         <button class="top-btn">Back to top</button>
     </div>
@@ -168,6 +310,131 @@
         // Server-sent events for real-time updates
         const eventSource = new EventSource('/events');
 
+        // Search functionality
+        let allLogs = [];
+        let isSearchActive = false;
+        let searchResults = [];
+
+        // Store original logs for search functionality
+        function storeAllLogs(logs) {
+            allLogs = logs;
+        }
+
+        // Highlight search terms in text
+        function highlightSearchTerm(text, searchTerm) {
+            if (!searchTerm || !text) return text;
+
+            const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<span class="search-match">$1</span>');
+        }
+
+        // Perform client-side search
+        function performClientSearch(searchTerm) {
+            if (!searchTerm.trim()) {
+                return allLogs;
+            }
+
+            const searchLower = searchTerm.toLowerCase();
+            return allLogs.filter(log => {
+                return (
+                    log.message.toLowerCase().includes(searchLower) ||
+                    log.source.toLowerCase().includes(searchLower) ||
+                    (log.metadata && JSON.stringify(log.metadata).toLowerCase().includes(searchLower))
+                );
+            });
+        }
+
+        // Perform server-side search
+        async function performServerSearch(searchTerm) {
+            try {
+                const response = await fetch(`/logs/search?q=${encodeURIComponent(searchTerm)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    return data.logs;
+                } else {
+                    console.error('Search error:', data.error);
+                    return [];
+                }
+            } catch (error) {
+                console.error('Search request failed:', error);
+                return [];
+            }
+        }
+
+        // Display search results
+        function displaySearchResults(logs, searchTerm = '') {
+            const container = document.getElementById('logs-container');
+            const headerCount = document.querySelector('.header h1');
+            const searchInfo = document.getElementById('search-info');
+
+            if (logs.length === 0) {
+                container.innerHTML = '<div class="log-entry" style="color: #888888; text-align: center;">No logs found</div>';
+                headerCount.textContent = '0';
+                searchInfo.textContent = searchTerm ? `No results for "${searchTerm}"` : '';
+            } else {
+                let html = '';
+                logs.forEach(log => {
+                    const time = log.timestamp.split('T')[1].split('.')[0];
+                    const metadata = log.metadata && Object.keys(log.metadata).length > 0 ?
+                        ` <span class="log-metadata">${JSON.stringify(log.metadata)}</span>` : '';
+
+                    // Highlight search terms if searching
+                    const message = searchTerm ? highlightSearchTerm(log.message, searchTerm) : log.message;
+                    const source = searchTerm ? highlightSearchTerm(log.source, searchTerm) : log.source;
+                    const metadataStr = metadata ? (searchTerm ? highlightSearchTerm(metadata, searchTerm) : metadata) : '';
+
+                    const highlightClass = searchTerm ? ' highlighted' : '';
+
+                    html += `<div class="log-entry${highlightClass}">
+ <span class="log-time">${time}</span> <span class="log-level-${log.level}">${log.level}</span> <span class="log-source">[${source}]</span> <span class="log-message">${message}</span>${metadataStr}
+ </div>`;
+                });
+                container.innerHTML = html;
+                headerCount.textContent = logs.length;
+
+                if (searchTerm) {
+                    searchInfo.textContent = `${logs.length} result(s) for "${searchTerm}"`;
+                } else {
+                    searchInfo.textContent = '';
+                }
+            }
+        }
+
+        // Clear search
+        function clearSearch() {
+            const searchInput = document.getElementById('search-input');
+            searchInput.value = '';
+            isSearchActive = false;
+            searchResults = [];
+            displaySearchResults(allLogs);
+        }
+
+        // Perform search
+        async function performSearch() {
+            const searchInput = document.getElementById('search-input');
+            const searchTerm = searchInput.value.trim();
+
+            if (!searchTerm) {
+                clearSearch();
+                return;
+            }
+
+            isSearchActive = true;
+
+            // Use client-side search for better performance with small datasets
+            // Switch to server-side search for larger datasets or more complex queries
+            if (allLogs.length > 1000) {
+                // Use server-side search for large datasets
+                searchResults = await performServerSearch(searchTerm);
+            } else {
+                // Use client-side search for smaller datasets
+                searchResults = performClientSearch(searchTerm);
+            }
+
+            displaySearchResults(searchResults, searchTerm);
+        }
+
         eventSource.onmessage = function (event) {
             const data = JSON.parse(event.data);
 
@@ -175,22 +442,20 @@
                 const container = document.getElementById('logs-container');
                 const headerCount = document.querySelector('.header h1');
 
-                if (data.logs.length === 0) {
-                    container.innerHTML = '';
-                    headerCount.textContent = '0';
-                } else {
-                    let html = '';
-                    data.logs.forEach(log => {
-                        const time = log.timestamp.split('T')[1].split('.')[0];
-                        const metadata = log.metadata && Object.keys(log.metadata).length > 0 ?
-                            ` <span class="log-metadata">${JSON.stringify(log.metadata)}</span>` : '';
+                // Check if user is at or near the bottom before updating
+                const isAtBottom = (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 50);
 
-                        html += `<div class="log-entry">
-<span class="log-time">${time}</span> <span class="log-level-${log.level}">${log.level}</span> <span class="log-source">[${log.source}]</span> <span class="log-message">${log.message}</span>${metadata}
-</div>`;
-                    });
-                    container.innerHTML = html;
-                    headerCount.textContent = data.logs.length;
+                // Store all logs for search functionality
+                storeAllLogs(data.logs);
+
+                // Only update display if not actively searching
+                if (!isSearchActive) {
+                    displaySearchResults(data.logs);
+
+                    // Only auto-scroll to bottom if user was already at the bottom
+                    if (isAtBottom) {
+                        window.scrollTo(0, document.body.scrollHeight);
+                    }
                 }
             }
         };
@@ -242,6 +507,70 @@
                 top: 0,
                 behavior: 'smooth'
             });
+        });
+
+        // Search event listeners
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+
+        // Search button click
+        searchBtn.addEventListener('click', performSearch);
+
+        // Clear search button click
+        clearSearchBtn.addEventListener('click', clearSearch);
+
+        // Enter key to search, Escape key to clear
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                clearSearch();
+            }
+        });
+
+        // Global keyboard shortcuts
+        document.addEventListener('keydown', function (e) {
+            // Ctrl/Cmd + F to focus search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
+            // Escape to clear search when not in input
+            else if (e.key === 'Escape' && document.activeElement !== searchInput) {
+                clearSearch();
+            }
+        });
+
+        // Initialize search with initial logs
+        // Initialize with logs passed from server
+        window.addEventListener('DOMContentLoaded', function () {
+            // Initialize search functionality with existing logs
+            const initialLogs = [];
+            const logEntries = document.querySelectorAll('.log-entry');
+            logEntries.forEach(entry => {
+                // Extract log data from DOM elements for search functionality
+                const timeSpan = entry.querySelector('.log-time');
+                const levelSpan = entry.querySelector('[class^="log-level-"]');
+                const sourceSpan = entry.querySelector('.log-source');
+                const messageSpan = entry.querySelector('.log-message');
+                const metadataSpan = entry.querySelector('.log-metadata');
+
+                if (timeSpan && levelSpan && sourceSpan && messageSpan) {
+                    const log = {
+                        timestamp: '2024-01-01T' + timeSpan.textContent + '.000000',
+                        level: levelSpan.textContent,
+                        source: sourceSpan.textContent.replace(/[\[\]]/g, ''),
+                        message: messageSpan.textContent,
+                        metadata: metadataSpan ? JSON.parse(metadataSpan.textContent || '{}') : {}
+                    };
+                    initialLogs.push(log);
+                }
+            });
+            storeAllLogs(initialLogs);
         });
     </script>
 </body>
