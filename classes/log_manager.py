@@ -34,6 +34,15 @@ class LogManager:
             'logs_by_source': {}
         }
 
+    def add_session_start_marker(self):
+        """
+        Add a session start marker log entry.
+        This is used to indicate the start of a new log session without clearing existing logs.
+        """
+        return self.add_log(level=LogLevel.INFO,
+                     message="SESSION START",
+                     source="system",)
+
     def add_log(self, level: str, message: str, source: str = "unknown", 
                 metadata: Optional[Dict[str, Any]] = None) -> LogEntry:
         """

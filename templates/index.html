@@ -14,6 +14,13 @@
             line-height: 1.2;
         }
 
+        .log-session-divider {
+            border: none;
+            border-top: 2px solid #43536478 ;
+            margin: 12px 0;
+            width: 100%;
+        }
+
         .log-entry {
             margin: 2px 0;
             font-size: 13px;
@@ -292,10 +299,19 @@
     <div id="logs-container">
         {% for log in logs %}
         <div class="log-entry">
-            <span class="log-time">{{ log.timestamp.split('T')[1].split('.')[0] }}</span> <span
+            {% if log.message == "SESSION START" %}
+            <span class="log-session-divider"></span>
+            {% else %}
+
+            <span class="log-time">{{ log.timestamp.split('T')[1].split('.')[0] }}</span> 
+            <span
                 class="log-level-{{ log.level }}">{{ log.level }}</span> <span class="log-source">[{{ log.source
-                }}]</span> <span class="log-message">{{ log.message }}</span>{% if log.metadata and log.metadata != {}
-            %} <span class="log-metadata">{{ log.metadata }}</span>{% endif %}
+                }}]</span> 
+            <span class="log-message">{{ log.message }}</span>{% if log.metadata and log.metadata != {}
+            %} 
+            <span class="log-metadata">{{ log.metadata }}</span>{% endif %}
+
+            {% endif %}
         </div>
         {% endfor %}
     </div>
@@ -375,20 +391,24 @@
             } else {
                 let html = '';
                 logs.forEach(log => {
-                    const time = log.timestamp.split('T')[1].split('.')[0];
-                    const metadata = log.metadata && Object.keys(log.metadata).length > 0 ?
-                        ` <span class="log-metadata">${JSON.stringify(log.metadata)}</span>` : '';
+                    if (log.message === 'SESSION START') {
+                        html += `<div class="log-session-divider"></div>`;
+                    } else {
+                        const time = log.timestamp.split('T')[1].split('.')[0];
+                        const metadata = log.metadata && Object.keys(log.metadata).length > 0 ?
+                            ` <span class="log-metadata">${JSON.stringify(log.metadata)}</span>` : '';
 
-                    // Highlight search terms if searching
-                    const message = searchTerm ? highlightSearchTerm(log.message, searchTerm) : log.message;
-                    const source = searchTerm ? highlightSearchTerm(log.source, searchTerm) : log.source;
-                    const metadataStr = metadata ? (searchTerm ? highlightSearchTerm(metadata, searchTerm) : metadata) : '';
+                        // Highlight search terms if searching
+                        const message = searchTerm ? highlightSearchTerm(log.message, searchTerm) : log.message;
+                        const source = searchTerm ? highlightSearchTerm(log.source, searchTerm) : log.source;
+                        const metadataStr = metadata ? (searchTerm ? highlightSearchTerm(metadata, searchTerm) : metadata) : '';
 
-                    const highlightClass = searchTerm ? ' highlighted' : '';
+                        const highlightClass = searchTerm ? ' highlighted' : '';
 
-                    html += `<div class="log-entry${highlightClass}">
+                        html += `<div class="log-entry${highlightClass}">
  <span class="log-time">${time}</span> <span class="log-level-${log.level}">${log.level}</span> <span class="log-source">[${source}]</span> <span class="log-message">${message}</span>${metadataStr}
  </div>`;
+                    }
                 });
                 container.innerHTML = html;
                 headerCount.textContent = logs.length;

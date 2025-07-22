@@ -1,3 +1,4 @@
+import time
 from flask import Flask, request, jsonify, render_template, Response
 from datetime import datetime
 import threading
@@ -49,7 +50,9 @@ def add_log():
         
         if not data:
             return jsonify({"error": "No data provided"}), 400
-        
+
+        time.sleep(0.5) # this is to prevent race conditions
+
         # Create log entry using LogManager
         log_entry = log_manager.add_log_from_dict(data)
 
@@ -122,6 +125,21 @@ def get_log_statistics():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/session/start', methods=['POST'])
+def session_start():
+    print('asdfasd')
+    """Start new log session without clearing existing logs"""
+    try:
+        print(log_manager.add_session_start_marker())
+        return jsonify({
+            "success": True,
+            "message": "Session start marker added"
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 
 @app.route('/logs/errors', methods=['GET'])
 def get_recent_errors():
@@ -197,12 +215,7 @@ if __name__ == '__main__':
     local_ip = get_local_ip()
 
     print(f"\n🚀 API Logger Server starting...")
-    print(f"📡 Server running on http://{local_ip}:2000")
-    print(f"📊 Web interface: http://{local_ip}:2000")
-    print(f"📝 Send logs to: http://{local_ip}:2000/log")
-    print(f"📈 Statistics: http://{local_ip}:2000/logs/statistics")
-    print(f"🚨 Recent errors: http://{local_ip}:2000/logs/errors")
-    print(f"❤️  Health check: http://{local_ip}:2000/health\n")
+    print(f"Server running on http://{local_ip}:2000")
     
     # Run the server
     app.run(host='0.0.0.0', port=2000, debug=True)
