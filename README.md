@@ -13,7 +13,7 @@ A lightweight HTTP API server for centralized logging and debugging. Send log en
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/jjamest/api-logger.git
 cd api-logger
 ```
 
